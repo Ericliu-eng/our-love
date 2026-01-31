@@ -3,54 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Our Love Story</title>
+    <title>Our Love Journey ❤️</title>
     <style>
-        body { margin: 0; background: #fff5f7; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; overflow: hidden; }
-        .card { text-align: center; background: white; padding: 40px; border-radius: 25px; box-shadow: 0 10px 30px rgba(255,100,100,0.1); width: 80%; max-width: 320px; z-index: 10; }
-        .heart { font-size: 50px; animation: beat 1s infinite; margin-bottom: 10px; }
-        @keyframes beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-        .days { font-size: 3.5rem; font-weight: bold; color: #ff6b81; margin: 10px 0; }
-        .time { color: #888; font-size: 1rem; }
-        .footer { margin-top: 20px; font-size: 0.8rem; color: #ffb3ba; letter-spacing: 2px; }
-        /* 背景飘落爱心 */
-        .floating-heart { position: absolute; color: rgba(255,107,129,0.2); pointer-events: none; animation: fall linear infinite; }
+        :root { --love-red: #ff6b81; --bg-pink: #fff5f7; }
+        body { margin: 0; background: var(--bg-pink); display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; overflow: hidden; }
+        
+        .card { text-align: center; background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 30px; box-shadow: 0 15px 40px rgba(255,100,100,0.15); width: 85%; max-width: 350px; z-index: 10; backdrop-filter: blur(5px); }
+        
+        .heart { font-size: 40px; animation: beat 1.2s infinite; margin-bottom: 10px; display: inline-block; }
+        @keyframes beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        
+        .days-box { margin: 15px 0; }
+        .days-num { font-size: 3.5rem; font-weight: 900; color: var(--love-red); text-shadow: 2px 2px 5px rgba(255,107,129,0.2); }
+        
+        /* 进度条样式 */
+        .progress-container { background: #eee; border-radius: 10px; height: 10px; margin: 20px 0; overflow: hidden; }
+        .progress-bar { background: linear-gradient(90deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); height: 100%; width: 0%; transition: width 1s; }
+        
+        .quote-box { font-size: 0.9rem; color: #666; font-style: italic; min-height: 40px; margin: 15px 0; line-height: 1.5; }
+        .time-detail { font-size: 0.95rem; color: #888; background: #fdf2f4; padding: 10px; border-radius: 15px; }
+        .footer { margin-top: 20px; font-size: 0.75rem; color: #ccc; letter-spacing: 2px; }
+
+        .floating-heart { position: absolute; color: rgba(255,107,129,0.25); pointer-events: none; animation: fall linear infinite; z-index: 1; }
         @keyframes fall { from { transform: translateY(-10vh) rotate(0deg); } to { transform: translateY(110vh) rotate(360deg); } }
     </style>
 </head>
 <body>
     <div class="card">
         <div class="heart">❤️</div>
-        <div style="color:#555">我们已经相爱</div>
-        <div id="days" class="days">0 天</div>
-        <div id="time" class="time">00:00:00</div>
-        <div class="footer">SINCE 2025.12.07</div>
+        <div style="font-size: 1.1rem; color: #444; font-weight: bold;">Eric & 宝贝</div>
+        
+        <div class="days-box">
+            <span id="days" class="days-num">0</span><span style="color:var(--love-red); font-weight:bold;"> Days</span>
+        </div>
+
+        <div id="quote" class="quote-box">“加载我们的故事...”</div>
+
+        <div class="progress-container">
+            <div id="progress" class="progress-bar"></div>
+        </div>
+        <div id="progress-text" style="font-size: 0.7rem; color: #999; margin-bottom: 10px;">距离下个纪念日...</div>
+
+        <div id="time" class="time-detail">00:00:00</div>
+        
+        <div class="footer">STORY STARTED: 2025.12.07</div>
     </div>
 
     <script>
-        function createHeart() {
-            const h = document.createElement('div');
-            h.innerHTML = '❤️';
-            h.className = 'floating-heart';
-            h.style.left = Math.random() * 100 + 'vw';
-            h.style.animationDuration = (Math.random() * 3 + 2) + 's';
-            h.style.fontSize = (Math.random() * 20 + 10) + 'px';
-            document.body.appendChild(h);
-            setTimeout(() => h.remove(), 5000);
+        const quotes = [
+            "你是伯克利最美的遇见。",
+            "数据无法计算我对你的爱。",
+            "我们的恋爱曲线，永远向上。",
+            "从 2025 年 12 月 7 日起，余生皆是你。",
+            "世界很大，但我的眼里只有你。"
+        ];
+
+        function init() {
+            // 随机显示一句情话
+            document.getElementById('quote').innerText = `“${quotes[Math.floor(Math.random() * quotes.length)]}”`;
+            
+            // 飘落爱心
+            setInterval(() => {
+                const h = document.createElement('div');
+                h.innerHTML = '❤️';
+                h.className = 'floating-heart';
+                h.style.left = Math.random() * 100 + 'vw';
+                h.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                h.style.fontSize = (Math.random() * 15 + 10) + 'px';
+                document.body.appendChild(h);
+                setTimeout(() => h.remove(), 6000);
+            }, 400);
         }
-        setInterval(createHeart, 300);
 
         function update() {
             const start = new Date('2025-12-07T00:00:00');
             const now = new Date();
             const diff = now - start;
+
             const d = Math.floor(diff / 86400000);
             const h = Math.floor((diff / 3600000) % 24);
             const m = Math.floor((diff / 60000) % 60);
             const s = Math.floor((diff / 1000) % 60);
-            document.getElementById('days').innerText = d + " 天";
-            document.getElementById('time').innerText = `${h<10?'0'+h:h}时 ${m<10?'0'+m:m}分 ${s<10?'0'+s:s}秒`;
+
+            document.getElementById('days').innerText = d;
+            document.getElementById('time').innerText = `${h<10?'0'+h:h}h ${m<10?'0'+m:m}m ${s<10?'0'+s:s}s`;
+
+            // 计算进度 (以100天为一个周期为例)
+            const nextMilestone = Math.ceil((d + 1) / 100) * 100;
+            const progress = (d % 100);
+            document.getElementById('progress').style.width = progress + '%';
+            document.getElementById('progress-text').innerText = `距离第 ${nextMilestone} 天纪念日进度`;
         }
-        setInterval(update, 1000); update();
+
+        init();
+        setInterval(update, 1000); 
+        update();
     </script>
 </body>
 </html>
