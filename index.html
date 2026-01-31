@@ -3,11 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Infinity Love Logic ❤️</title>
+    <title>Liquid Love UI</title>
     <style>
-        body { margin: 0; background: #050505; overflow: hidden; font-family: 'PingFang SC', sans-serif; }
-        canvas { position: absolute; top: 0; left: 0; filter: blur(1px) contrast(1.2); }
+        :root {
+            --primary: #ff758c;
+            --secondary: #ff7eb3;
+        }
+        body { margin: 0; background: #0a0a0c; overflow: hidden; font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         
+        /* 模糊背景层 */
+        canvas { position: absolute; top: 0; left: 0; filter: blur(60px); opacity: 0.8; }
+
+        /* 噪点纹理蒙版 */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://grainy-gradients.vercel.app/noise.svg');
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 5;
+        }
+
         .ui-layer {
             position: relative;
             z-index: 10;
@@ -15,159 +32,150 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            pointer-events: none;
         }
 
         .card {
             text-align: center;
-            background: rgba(20, 20, 20, 0.4);
-            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 50px 30px;
             border-radius: 40px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 107, 129, 0.3);
+            /* 核心磨砂玻璃效果 */
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
-            width: 280px;
-            pointer-events: auto;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,107,129,0.1);
-            transition: transform 0.3s ease;
+            width: 85%;
+            max-width: 320px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
         }
-        .card:active { transform: scale(0.95); }
 
-        .days-num { font-size: 4rem; font-weight: 800; background: linear-gradient(45deg, #ff6b81, #ffafbd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; margin: 10px 0; }
-        .time-detail { font-family: monospace; font-size: 1.1rem; color: #ff6b81; letter-spacing: 1px; }
-        .names { font-size: 1.2rem; font-weight: 300; letter-spacing: 3px; margin-bottom: 5px; }
-        .hint { position: absolute; bottom: 30px; color: rgba(255,255,255,0.3); font-size: 0.8rem; letter-spacing: 1px; }
+        .names {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            opacity: 0.7;
+            margin-bottom: 20px;
+        }
+
+        .days-num {
+            font-size: 5rem;
+            font-weight: 200; /* 极细字体显得高级 */
+            background: linear-gradient(135deg, #fff 30%, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 10px 0;
+            letter-spacing: -2px;
+        }
+
+        .time-detail {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            color: var(--primary);
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-top: 15px;
+        }
+
+        .divider {
+            width: 40px;
+            height: 2px;
+            background: var(--primary);
+            margin: 25px auto;
+            border-radius: 2px;
+            opacity: 0.5;
+        }
+
+        .footer {
+            font-size: 0.65rem;
+            opacity: 0.4;
+            letter-spacing: 1px;
+        }
+
     </style>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
+    <canvas id="fluidCanvas"></canvas>
+    
     <div class="ui-layer">
         <div class="card">
             <div class="names">Z & L</div>
-            <div class="days-num" id="days">0</div>
-            <div id="time" class="time-detail">00:00:00</div>
-            <div style="margin-top: 20px; font-size: 0.7rem; opacity: 0.5;">DEEP LOVE SINCE 2025.12.07</div>
+            <div class="days-num" id="days">00</div>
+            <div class="time-detail" id="time">00:00:00</div>
+            <div class="divider"></div>
+            <div class="footer">ESTABLISHED DECEMBER 2025</div>
         </div>
-        <div class="hint">长按屏幕 ✨</div>
     </div>
 
 <script>
-    const canvas = document.getElementById('canvas');
+    const canvas = document.getElementById('fluidCanvas');
     const ctx = canvas.getContext('2d');
-    let particles = [];
-    let isPressing = false;
-    let mouse = { x: 0, y: 0 };
+    let points = [];
 
     function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth / 4; // 低分辨率绘制提高性能并增加模糊感
+        canvas.height = window.innerHeight / 4;
     }
     window.onresize = resize;
     resize();
 
-    // 心形数学公式计算
-    function getHeartPoint(t) {
-        let x = 16 * Math.pow(Math.sin(t), 3);
-        let y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
-        return { x: x * 10, y: y * 10 }; // 缩放系数
-    }
-
-    class Particle {
-        constructor(isHeart = false, targetX = 0, targetY = 0) {
-            this.reset(isHeart, targetX, targetY);
-        }
-
-        reset(isHeart, targetX, targetY) {
+    class FluidPoint {
+        constructor() {
             this.x = Math.random() * canvas.width;
             this.y = Math.random() * canvas.height;
-            this.size = Math.random() * 3 + 1;
-            this.baseX = targetX;
-            this.baseY = targetY;
-            this.vx = (Math.random() - 0.5) * 2;
-            this.vy = (Math.random() - 0.5) * 2;
-            this.acc = 0.05;
-            this.friction = 0.95;
-            this.color = `hsl(${Math.random() * 20 + 340}, 80%, 70%)`;
-            this.isHeart = isHeart;
+            this.vx = (Math.random() - 0.5) * 0.5;
+            this.vy = (Math.random() - 0.5) * 0.5;
+            this.radius = Math.random() * 80 + 40;
+            this.color = Math.random() > 0.5 ? '#ff758c' : '#764ba2';
         }
-
-        update() {
-            if (isPressing) {
-                // 向心力算法
-                let dx = this.baseX - this.x;
-                let dy = this.baseY - this.y;
-                this.vx += dx * this.acc;
-                this.vy += dy * this.acc;
-                this.vx *= this.friction;
-                this.vy *= this.friction;
-            } else {
-                // 漂浮算法
-                this.vx += (Math.random() - 0.5) * 0.1;
-                this.vy += (Math.random() - 0.5) * 0.1;
+        update(mX, mY) {
+            // 磁力效果
+            if (mX !== undefined) {
+                let dx = mX/4 - this.x;
+                let dy = mY/4 - this.y;
+                this.vx += dx * 0.001;
+                this.vy += dy * 0.001;
             }
             this.x += this.vx;
             this.y += this.vy;
+            // 边界检查
+            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            this.vx *= 0.99; // 阻尼
+            this.vy *= 0.99;
         }
-
         draw() {
-            ctx.fillStyle = this.color;
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             ctx.fill();
         }
     }
 
-    // 初始化400个粒子作为心形矩阵
-    function init() {
-        particles = [];
-        for (let i = 0; i < 400; i++) {
-            let t = (i / 400) * Math.PI * 2;
-            let point = getHeartPoint(t);
-            particles.push(new Particle(true, canvas.width/2 + point.x, canvas.height/2 + point.y - 20));
-        }
-    }
-    init();
+    for(let i=0; i<6; i++) points.push(new FluidPoint());
 
-    // 交互逻辑
-    const startPress = (e) => {
-        isPressing = true;
-        // 每次点击中心微调到手指位置
-        const x = e.touches ? e.touches[0].clientX : e.clientX;
-        const y = e.touches ? e.touches[0].clientY : e.clientY;
-        particles.forEach(p => {
-            p.baseX = x + (getHeartPoint(particles.indexOf(p)/400 * Math.PI * 2).x);
-            p.baseY = y + (getHeartPoint(particles.indexOf(p)/400 * Math.PI * 2).y);
-        });
-    };
-    const endPress = () => isPressing = false;
-
-    window.addEventListener('mousedown', startPress);
-    window.addEventListener('mouseup', endPress);
-    window.addEventListener('touchstart', startPress);
-    window.addEventListener('touchend', endPress);
+    let mouseX, mouseY;
+    window.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+    window.addEventListener('touchmove', e => { mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; });
 
     function animate() {
-        ctx.fillStyle = 'rgba(5, 5, 5, 0.2)'; // 拖尾效果
+        ctx.fillStyle = '#0a0a0c';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        particles.forEach(p => {
-            p.update();
+        points.forEach(p => {
+            p.update(mouseX, mouseY);
             p.draw();
         });
         requestAnimationFrame(animate);
     }
     animate();
 
-    // 计时器逻辑（保持你原来的，优化了视觉展示）
     function updateTimer() {
         const start = new Date('2025-12-07T00:00:00');
         const now = new Date();
         const diff = now - start;
-        const d = Math.floor(diff / 86400000);
+        document.getElementById('days').innerText = Math.floor(diff / 86400000);
         const h = Math.floor((diff / 3600000) % 24);
         const m = Math.floor((diff / 60000) % 60);
         const s = Math.floor((diff / 1000) % 60);
-        document.getElementById('days').innerText = d;
         document.getElementById('time').innerText = `${h<10?'0'+h:h}:${m<10?'0'+m:m}:${s<10?'0'+s:s}`;
     }
     setInterval(updateTimer, 1000);
