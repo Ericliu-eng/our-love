@@ -3,28 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Liquid Love UI</title>
+    <title>Our Interactive Love ❤️</title>
     <style>
-        :root {
-            --primary: #ff758c;
-            --secondary: #ff7eb3;
-        }
-        body { margin: 0; background: #0a0a0c; overflow: hidden; font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
+        canvas { position: absolute; top: 0; left: 0; }
         
-        /* 模糊背景层 */
-        canvas { position: absolute; top: 0; left: 0; filter: blur(60px); opacity: 0.8; }
-
-        /* 噪点纹理蒙版 */
-        body::after {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: url('https://grainy-gradients.vercel.app/noise.svg');
-            opacity: 0.05;
-            pointer-events: none;
-            z-index: 5;
-        }
-
         .ui-layer {
             position: relative;
             z-index: 10;
@@ -32,151 +15,118 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            pointer-events: none; /* 让点击穿透到画布 */
         }
 
         .card {
             text-align: center;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 50px 30px;
-            border-radius: 40px;
-            /* 核心磨砂玻璃效果 */
-            backdrop-filter: blur(40px) saturate(180%);
-            -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
+            padding: 30px;
+            border-radius: 30px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
-            width: 85%;
+            width: 80%;
             max-width: 320px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            pointer-events: auto; /* 卡片区域恢复交互 */
+            box-shadow: 0 0 30px rgba(255,107,129,0.3);
         }
 
-        .names {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            opacity: 0.7;
-            margin-bottom: 20px;
-        }
-
-        .days-num {
-            font-size: 5rem;
-            font-weight: 200; /* 极细字体显得高级 */
-            background: linear-gradient(135deg, #fff 30%, var(--primary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 10px 0;
-            letter-spacing: -2px;
-        }
-
-        .time-detail {
-            font-family: 'Courier New', monospace;
-            font-size: 1.2rem;
-            color: var(--primary);
-            font-weight: bold;
-            letter-spacing: 2px;
-            margin-top: 15px;
-        }
-
-        .divider {
-            width: 40px;
-            height: 2px;
-            background: var(--primary);
-            margin: 25px auto;
-            border-radius: 2px;
-            opacity: 0.5;
-        }
-
-        .footer {
-            font-size: 0.65rem;
-            opacity: 0.4;
-            letter-spacing: 1px;
-        }
-
+        .days-num { font-size: 3.5rem; font-weight: bold; color: #ff6b81; }
+        .time-detail { font-size: 1rem; margin: 15px 0; color: #eee; }
+        .footer { font-size: 0.8rem; opacity: 0.6; letter-spacing: 2px; }
+        
+        /* 交互提示 */
+        .hint { position: absolute; bottom: 20px; color: rgba(255,255,255,0.4); font-size: 0.7rem; }
     </style>
 </head>
 <body>
-    <canvas id="fluidCanvas"></canvas>
+    <canvas id="canvas"></canvas>
     
     <div class="ui-layer">
         <div class="card">
-            <div class="names">Z & L</div>
-            <div class="days-num" id="days">00</div>
-            <div class="time-detail" id="time">00:00:00</div>
-            <div class="divider"></div>
-            <div class="footer">ESTABLISHED DECEMBER 2025</div>
+            <div style="font-size: 40px;">💖</div>
+            <div style="margin-top:10px; opacity:0.9;">Z & L</div>
+            <div class="days-num" id="days">0</div>
+            <div style="font-size:1.2rem; color:#ff6b81; margin-bottom:10px;">DAYS</div>
+            <div id="time" class="time-detail">00:00:00</div>
+            <div class="footer">SINCE 2025.12.07</div>
         </div>
+        <div class="hint">滑动屏幕试试看，会有星光跟着你 ✨</div>
     </div>
 
 <script>
-    const canvas = document.getElementById('fluidCanvas');
+    const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    let points = [];
+    let particles = [];
 
     function resize() {
-        canvas.width = window.innerWidth / 4; // 低分辨率绘制提高性能并增加模糊感
-        canvas.height = window.innerHeight / 4;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
     }
     window.onresize = resize;
     resize();
 
-    class FluidPoint {
-        constructor() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.vx = (Math.random() - 0.5) * 0.5;
-            this.vy = (Math.random() - 0.5) * 0.5;
-            this.radius = Math.random() * 80 + 40;
-            this.color = Math.random() > 0.5 ? '#ff758c' : '#764ba2';
+    class Particle {
+        constructor(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.size = Math.random() * 5 + 2;
+            this.speedX = Math.random() * 3 - 1.5;
+            this.speedY = Math.random() * 3 - 1.5;
+            this.color = color;
+            this.opacity = 1;
         }
-        update(mX, mY) {
-            // 磁力效果
-            if (mX !== undefined) {
-                let dx = mX/4 - this.x;
-                let dy = mY/4 - this.y;
-                this.vx += dx * 0.001;
-                this.vy += dy * 0.001;
-            }
-            this.x += this.vx;
-            this.y += this.vy;
-            // 边界检查
-            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-            this.vx *= 0.99; // 阻尼
-            this.vy *= 0.99;
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            this.opacity -= 0.02;
         }
         draw() {
+            ctx.fillStyle = this.color.replace(')', `, ${this.opacity})`).replace('rgb', 'rgba');
             ctx.beginPath();
-            ctx.fillStyle = this.color;
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
         }
     }
 
-    for(let i=0; i<6; i++) points.push(new FluidPoint());
+    function createParticles(e) {
+        const x = e.touches ? e.touches[0].clientX : e.clientX;
+        const y = e.touches ? e.touches[0].clientY : e.clientY;
+        const color = `rgb(255, ${Math.random()*100+100}, ${Math.random()*100+150})`;
+        for(let i=0; i<3; i++) particles.push(new Particle(x, y, color));
+    }
 
-    let mouseX, mouseY;
-    window.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
-    window.addEventListener('touchmove', e => { mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; });
+    // 监听滑动和点击
+    window.addEventListener('mousemove', createParticles);
+    window.addEventListener('touchmove', createParticles);
+    window.addEventListener('mousedown', createParticles);
 
     function animate() {
-        ctx.fillStyle = '#0a0a0c';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        points.forEach(p => {
-            p.update(mouseX, mouseY);
-            p.draw();
-        });
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for(let i = 0; i < particles.length; i++) {
+            particles[i].update();
+            particles[i].draw();
+            if(particles[i].opacity <= 0) {
+                particles.splice(i, 1);
+                i--;
+            }
+        }
         requestAnimationFrame(animate);
     }
     animate();
 
+    // 恋爱计时逻辑
     function updateTimer() {
         const start = new Date('2025-12-07T00:00:00');
         const now = new Date();
         const diff = now - start;
-        document.getElementById('days').innerText = Math.floor(diff / 86400000);
+        const d = Math.floor(diff / 86400000);
         const h = Math.floor((diff / 3600000) % 24);
         const m = Math.floor((diff / 60000) % 60);
         const s = Math.floor((diff / 1000) % 60);
-        document.getElementById('time').innerText = `${h<10?'0'+h:h}:${m<10?'0'+m:m}:${s<10?'0'+s:s}`;
+        document.getElementById('days').innerText = d;
+        document.getElementById('time').innerText = `${h<10?'0'+h:h}h ${m<10?'0'+m:m}m ${s<10?'0'+s:s}s`;
     }
     setInterval(updateTimer, 1000);
     updateTimer();
