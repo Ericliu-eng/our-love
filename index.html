@@ -190,16 +190,25 @@
         addMessage("...", 'ai-msg', tempId);
 
         try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: `你是一个温柔的助手，用户正看着 Z & L 在一起 ${document.getElementById('days').innerText} 天的纪念页。回复要暖心简短：${text}` }] }] })
-            });
-            const data = await res.json();
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: `你是一个温柔的助手，用户正看着 Z & L 在一起 64 天的纪念页。回复要暖心简短：${text}` }] }] })
+        });
+        
+        const data = await res.json();
+        
+        if (data.error) {
+            // 如果 API 返回了错误（比如 Key 无效或超限），直接显示原因
+            document.getElementById(tempId).innerText = "AI 暂时断开: " + data.error.message;
+        } else {
             document.getElementById(tempId).innerText = data.candidates[0].content.parts[0].text;
-        } catch (e) {
-            document.getElementById(tempId).innerText = "由于浏览器安全限制，请尝试在服务器环境运行此网页。";
         }
+    } catch (e) {
+        // 只有在网络连接彻底断开时才报这个错
+        document.getElementById(tempId).innerText = "网络请求失败，请检查网络连接或刷新页面。";
+    }
     }
 
     function addMessage(t, c, id) {
