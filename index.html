@@ -15,7 +15,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            pointer-events: none;
+            pointer-events: none; /* 让点击穿透到画布 */
         }
 
         .card {
@@ -28,67 +28,16 @@
             color: white;
             width: 80%;
             max-width: 320px;
-            pointer-events: auto;
+            pointer-events: auto; /* 卡片区域恢复交互 */
             box-shadow: 0 0 30px rgba(255,107,129,0.3);
         }
 
         .days-num { font-size: 3.5rem; font-weight: bold; color: #ff6b81; }
         .time-detail { font-size: 1rem; margin: 15px 0; color: #eee; }
         .footer { font-size: 0.8rem; opacity: 0.6; letter-spacing: 2px; }
-        .hint { position: absolute; bottom: 20px; color: rgba(255,255,255,0.4); font-size: 0.7rem; }
-
-        /* 聊天界面 */
-        #chat-container {
-            position: fixed;
-            bottom: 85px;
-            right: 20px;
-            width: 280px;
-            height: 380px;
-            background: rgba(20, 20, 20, 0.8);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            display: none;
-            flex-direction: column;
-            z-index: 100;
-            overflow: hidden;
-            pointer-events: auto;
-        }
-
-        #chat-messages {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            color: white;
-            font-size: 0.9rem;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .message { padding: 8px 12px; border-radius: 12px; max-width: 85%; word-wrap: break-word; line-height: 1.4; }
-        .ai-msg { background: rgba(255, 107, 129, 0.3); align-self: flex-start; }
-        .user-msg { background: rgba(255, 255, 255, 0.2); align-self: flex-end; }
-
-        #chat-input-area { display: flex; padding: 12px; background: rgba(0, 0, 0, 0.5); border-top: 1px solid rgba(255,255,255,0.1); }
-        #chat-input { flex: 1; background: transparent; border: none; color: white; outline: none; }
         
-        #chat-toggle {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 55px;
-            height: 55px;
-            background: #ff6b81;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            z-index: 101;
-            pointer-events: auto;
-            font-size: 24px;
-        }
+        /* 交互提示 */
+        .hint { position: absolute; bottom: 20px; color: rgba(255,255,255,0.4); font-size: 0.7rem; }
     </style>
 </head>
 <body>
@@ -106,126 +55,81 @@
         <div class="hint">滑动屏幕试试看，会有星光跟着你 ✨</div>
     </div>
 
-    <div id="chat-toggle" onclick="toggleChat()">💬</div>
-
-    <div id="chat-container">
-        <div style="padding:10px; text-align:center; font-size:0.8rem; background:rgba(255,107,129,0.5); color:white;">Love AI</div>
-        <div id="chat-messages"><div class="message ai-msg">你好，有什么想对我说吗？</div></div>
-        <div id="chat-input-area">
-            <input type="text" id="chat-input" placeholder="输入..." onkeypress="if(event.key==='Enter') sendMessage()">
-            <div onclick="sendMessage()" style="color:#ff6b81; cursor:pointer; margin-left:10px;">发送</div>
-        </div>
-    </div>
-
 <script>
-    /* --- 1. 这里填 Key --- */
-    const KEY = ""; 
-
-    /* --- 2. 动画效果 --- */
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
     window.onresize = resize;
     resize();
+
     class Particle {
         constructor(x, y, color) {
-            this.x = x; this.y = y;
+            this.x = x;
+            this.y = y;
             this.size = Math.random() * 5 + 2;
             this.speedX = Math.random() * 3 - 1.5;
             this.speedY = Math.random() * 3 - 1.5;
-            this.color = color; this.opacity = 1;
+            this.color = color;
+            this.opacity = 1;
         }
-        update() { this.x += this.speedX; this.y += this.speedY; this.opacity -= 0.02; }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            this.opacity -= 0.02;
+        }
         draw() {
-            if(this.opacity <= 0) return;
-            ctx.fillStyle = this.color.replace('rgb', 'rgba').replace(')', `, ${this.opacity})`);
-            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = this.color.replace(')', `, ${this.opacity})`).replace('rgb', 'rgba');
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
         }
     }
+
     function createParticles(e) {
         const x = e.touches ? e.touches[0].clientX : e.clientX;
         const y = e.touches ? e.touches[0].clientY : e.clientY;
         const color = `rgb(255, ${Math.random()*100+100}, ${Math.random()*100+150})`;
         for(let i=0; i<3; i++) particles.push(new Particle(x, y, color));
     }
+
+    // 监听滑动和点击
     window.addEventListener('mousemove', createParticles);
     window.addEventListener('touchmove', createParticles);
-    animate();
+    window.addEventListener('mousedown', createParticles);
+
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles = particles.filter(p => p.opacity > 0);
-        particles.forEach(p => { p.update(); p.draw(); });
+        for(let i = 0; i < particles.length; i++) {
+            particles[i].update();
+            particles[i].draw();
+            if(particles[i].opacity <= 0) {
+                particles.splice(i, 1);
+                i--;
+            }
+        }
         requestAnimationFrame(animate);
     }
+    animate();
 
-    /* --- 3. 计时逻辑 --- */
+    // 恋爱计时逻辑
     function updateTimer() {
         const start = new Date('2025-12-07T00:00:00');
         const now = new Date();
         const diff = now - start;
-        document.getElementById('days').innerText = Math.floor(diff / 86400000);
+        const d = Math.floor(diff / 86400000);
         const h = Math.floor((diff / 3600000) % 24);
         const m = Math.floor((diff / 60000) % 60);
         const s = Math.floor((diff / 1000) % 60);
+        document.getElementById('days').innerText = d;
         document.getElementById('time').innerText = `${h<10?'0'+h:h}h ${m<10?'0'+m:m}m ${s<10?'0'+s:s}s`;
     }
     setInterval(updateTimer, 1000);
     updateTimer();
-
-    /* --- 4. 极简 AI 逻辑 --- */
-    function toggleChat() {
-        const chat = document.getElementById('chat-container');
-        chat.style.display = (chat.style.display === 'flex') ? 'none' : 'flex';
-    }
-
-async function sendMessage() {
-    const input = document.getElementById('chat-input');
-    const text = input.value.trim();
-    if(!text || !KEY) return;
-
-    addMessage(text, 'user-msg');
-    input.value = '';
-    const tempId = 'ai-' + Date.now();
-    addMessage("正在连接星光...", 'ai-msg', tempId);
-
-    try {
-        // 使用 v1 正式版接口
-        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${KEY}`;
-        
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: `你是一个极致浪漫的助手。用户正在看 Z & L 的 64 天纪念页。请用简短温暖的中英文回复：${text}`
-                    }]
-                }]
-            })
-        });
-
-        const data = await res.json();
-
-        if (data.error) {
-            document.getElementById(tempId).innerText = "API 提示: " + data.error.message;
-        } else {
-            const reply = data.candidates[0].content.parts[0].text;
-            document.getElementById(tempId).innerText = reply;
-        }
-    } catch (e) {
-        document.getElementById(tempId).innerText = "连接超时，请刷新重试。";
-    }
-}
-    function addMessage(t, c, id) {
-        const d = document.createElement('div');
-        d.className = `message ${c}`;
-        if(id) d.id = id;
-        d.innerText = t;
-        const b = document.getElementById('chat-messages');
-        b.appendChild(d);
-        b.scrollTop = b.scrollHeight;
-    }
 </script>
 </body>
 </html>
