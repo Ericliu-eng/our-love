@@ -1,189 +1,102 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Our Interactive Love ❤️</title>
-    <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
-        canvas { position: absolute; top: 0; left: 0; }
-        
-        .ui-layer {
-            position: relative;
-            z-index: 10;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            pointer-events: none;
-        }
+// 允许的固定域名
+const ALLOWED_ORIGINS = [
+  "https://ericliu-eng.github.io",   // GitHub Pages
+  "https://our-love-rosy.vercel.app" // 你的 Vercel 主站
+];
 
-        .card {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.15);
-            padding: 25px;
-            border-radius: 30px;
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            width: 85%;
-            max-width: 320px;
-            pointer-events: auto;
-            box-shadow: 0 0 30px rgba(255,107,129,0.3);
-        }
+// 允许所有 Vercel preview: https://our-love-xxxx.vercel.app
+function isAllowed(origin) {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
 
-        .days-num { font-size: 3.5rem; font-weight: bold; color: #ff6b81; }
-        .time-detail { font-size: 1rem; margin: 10px 0; color: #eee; }
-        
-        /* 新增：聊天区域样式 */
-        .chat-zone {
-            margin-top: 15px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 15px;
-            padding: 10px;
-        }
-        #chat-content {
-            height: 100px;
-            overflow-y: auto;
-            font-size: 0.8rem;
-            text-align: left;
-            margin-bottom: 8px;
-            scrollbar-width: none;
-        }
-        .input-group { display: flex; gap: 5px; }
-        input {
-            flex: 1;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,107,129,0.4);
-            border-radius: 8px;
-            color: white;
-            padding: 5px 8px;
-            outline: none;
-        }
-        button {
-            background: #ff6b81;
-            border: none;
-            color: white;
-            border-radius: 8px;
-            padding: 0 10px;
-            cursor: pointer;
-        }
-
-        .footer { font-size: 0.7rem; opacity: 0.6; letter-spacing: 2px; margin-top: 15px; }
-        .hint { position: absolute; bottom: 20px; color: rgba(255,255,255,0.4); font-size: 0.7rem; }
-    </style>
-</head>
-<body>
-    <canvas id="canvas"></canvas>
-    
-    <div class="ui-layer">
-        <div class="card">
-            <div style="font-size: 40px;">💖</div>
-            <div style="margin-top:5px; opacity:0.9;">Z & L</div>
-            <div class="days-num" id="days">0</div>
-            <div style="font-size:1.2rem; color:#ff6b81;">DAYS</div>
-            <div id="time" class="time-detail">00:00:00</div>
-
-            <div class="chat-zone">
-                <div id="chat-content">
-                    <div style="color: #ffb6c1;">AI分身: 他睡着啦，我是他的守护程序。有什么话想对他说？✨</div>
-                </div>
-                <div class="input-group">
-                    <input type="text" id="user-input" placeholder="输入消息...">
-                            <button id="send-btn">发送</button>
-
-                </div>
-            </div>
-
-            <div class="footer">SINCE 2025.12.07</div>
-        </div>
-        <div class="hint">滑动屏幕试试看，会有星光跟着你 ✨</div>
-    </div>
-
-<script>
- // --- 辅助函数：将消息渲染到聊天框 ---
-function appendMsg(text, align = "left", color = "") {
-  const box = document.getElementById("chat-content");
-  if (!box) return;
-  
-  const div = document.createElement("div");
-  div.style.margin = "8px 0";
-  div.style.textAlign = align;
-  div.style.wordBreak = "break-all"; // 防止长文字撑破布局
-  if (color) div.style.color = color;
-  
-  div.textContent = text;
-  box.appendChild(div);
-  
-  // 滚动到底部
-  box.scrollTop = box.scrollHeight;
+  return /^https:\/\/our-love-[a-z0-9-]+\.vercel\.app$/.test(origin);
 }
 
-// --- 核心函数：发送请求到 Vercel 后端 ---
-async function sendToAI() {
-  const input = document.getElementById("user-input");
-  const msg = input.value.trim();
-  
-  if (!msg) return;
+export default async function handler(req, res) {
+  const origin = req.headers.origin;
 
-  // 1. 显示用户发送的内容
-  appendMsg(msg, "right");
-  input.value = ""; // 清空输入框
-  
-  // 2. 显示加载状态
-  const loadingId = "msg-" + Date.now();
-  appendMsg("AI 正在思考...", "left", "gray");
+  // ===== CORS =====
+  if (isAllowed(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
+
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // 预检请求
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+
+  // 只允许 POST
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
+  // ===== Gemini Key =====
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: "Missing GEMINI_API_KEY" });
+  }
+
+  const model = "gemini-1.5-flash";
+  const url =
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+  // 兼容 body 是字符串
+  const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+
+  const messages = body?.messages || [];
+
+  // ===== 拼接上下文 =====
+  const prompt = messages
+    .map((m) => `${String(m.role || "").toUpperCase()}: ${String(m.content || "")}`)
+    .join("\n");
 
   try {
-    // 替换为你真实的 Vercel 部署地址
-    const API_URL = "https://our-love-rosy.vercel.app/api/chat";
-
-    const res = await fetch(API_URL, {
+    const response = await fetch(url, {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        messages: [
-          { role: "system", content: "你现在是Z的赛博分身。Z正在睡觉，你负责陪他的对象L聊天。语气要温柔，像真人一样自然。" },
-          { role: "user", content: msg }
-        ]
-      })
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }],
+          },
+        ],
+      }),
     });
 
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${res.status}`);
+    const data = await response.json();
+
+    // ===== Gemini 报错直接透传 =====
+    if (!response.ok) {
+      return res.status(response.status).json({
+        error: "Gemini API error",
+        details: data,
+      });
     }
 
-    const data = await res.json();
-    const reply = data?.choices?.[0]?.message?.content || "AI 忙累了，没说话。";
+    // ===== 安全读取回复 =====
+    const aiReply =
+      data?.candidates?.[0]?.content?.parts
+        ?.map((p) => p.text)
+        .filter(Boolean)
+        .join("") || "";
 
-    // 3. 显示 AI 回复
-    appendMsg(`AI分身: ${reply}`, "left", "#ffb6c1");
+    // ===== 返回前端（兼容 OpenAI 结构）=====
+    return res.status(200).json({
+      choices: [{ message: { content: aiReply || "(empty reply)" } }],
+      raw: data,
+    });
 
   } catch (e) {
-    console.error("Fetch Error:", e);
-    appendMsg(`(连接失败: ${e.message})`, "left", "#ff4d4d");
+    console.error("Gemini Error:", e);
+
+    return res.status(500).json({
+      error: "Gemini request failed",
+      details: String(e),
+    });
   }
 }
-
-// --- 事件绑定 ---
-window.addEventListener("DOMContentLoaded", () => {
-  const sendBtn = document.getElementById("send-btn");
-  const userInput = document.getElementById("user-input");
-
-  sendBtn.addEventListener("click", sendToAI);
-
-  userInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      sendToAI();
-    }
-  });
-});
-</script>
-
-</body>
-</html>
