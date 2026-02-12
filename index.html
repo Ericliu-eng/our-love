@@ -1,227 +1,289 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Our Interactive Love ❤️</title>
-    <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
-        canvas { position: absolute; top: 0; left: 0; }
-        
-        .ui-layer {
-            position: relative;
-            z-index: 10;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            pointer-events: none;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Our Interactive Love ❤️</title>
+  <style>
+    body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
+    canvas { position: absolute; top: 0; left: 0; }
 
-        .card {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.15);
-            padding: 25px;
-            border-radius: 30px;
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            width: 85%;
-            max-width: 320px;
-            pointer-events: auto;
-            box-shadow: 0 0 30px rgba(255,107,129,0.3);
-        }
+    .ui-layer {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      pointer-events: none;
+    }
 
-        .days-num { font-size: 3.5rem; font-weight: bold; color: #ff6b81; }
-        .time-detail { font-size: 1rem; margin: 10px 0; color: #eee; }
-        
-        /* 新增：聊天区域样式 */
-        .chat-zone {
-            margin-top: 15px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 15px;
-            padding: 10px;
-        }
-        #chat-content {
-            height: 100px;
-            overflow-y: auto;
-            font-size: 0.8rem;
-            text-align: left;
-            margin-bottom: 8px;
-            scrollbar-width: none;
-        }
-        .input-group { display: flex; gap: 5px; }
-        input {
-            flex: 1;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,107,129,0.4);
-            border-radius: 8px;
-            color: white;
-            padding: 5px 8px;
-            outline: none;
-        }
-        button {
-            background: #ff6b81;
-            border: none;
-            color: white;
-            border-radius: 8px;
-            padding: 0 10px;
-            cursor: pointer;
-        }
+    .card {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 25px;
+      border-radius: 30px;
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      width: 85%;
+      max-width: 320px;
+      pointer-events: auto;
+      box-shadow: 0 0 30px rgba(255,107,129,0.3);
+    }
 
-        .footer { font-size: 0.7rem; opacity: 0.6; letter-spacing: 2px; margin-top: 15px; }
-        .hint { position: absolute; bottom: 20px; color: rgba(255,255,255,0.4); font-size: 0.7rem; }
-    </style>
+    .days-num { font-size: 3.5rem; font-weight: bold; color: #ff6b81; }
+    .time-detail { font-size: 1rem; margin: 10px 0; color: #eee; }
+
+    .chat-zone {
+      margin-top: 15px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 15px;
+      padding: 10px;
+    }
+
+    #chat-content {
+      height: 100px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+      text-align: left;
+      margin-bottom: 8px;
+      scrollbar-width: none;
+    }
+
+    .msg { margin: 5px 0; opacity: 0.9; }
+    .msg.right { text-align: right; color: #fff; opacity: 0.85; }
+    .msg.left  { text-align: left; color: #ffb6c1; }
+
+    .input-group { display: flex; gap: 5px; }
+    input {
+      flex: 1;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,107,129,0.4);
+      border-radius: 8px;
+      color: white;
+      padding: 8px 10px;
+      outline: none;
+    }
+
+    button {
+      background: #ff6b81;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      padding: 0 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .footer { font-size: 0.7rem; opacity: 0.6; letter-spacing: 2px; margin-top: 15px; }
+    .hint { position: absolute; bottom: 20px; color: rgba(255,255,255,0.4); font-size: 0.7rem; }
+  </style>
 </head>
+
 <body>
-    <canvas id="canvas"></canvas>
-    
-    <div class="ui-layer">
-        <div class="card">
-            <div style="font-size: 40px;">💖</div>
-            <div style="margin-top:5px; opacity:0.9;">Z & L</div>
-            <div class="days-num" id="days">0</div>
-            <div style="font-size:1.2rem; color:#ff6b81;">DAYS</div>
-            <div id="time" class="time-detail">00:00:00</div>
+  <canvas id="canvas"></canvas>
 
-            <div class="chat-zone">
-                <div id="chat-content">
-                    <div style="color: #ffb6c1;">AI分身: 他睡着啦，我是他的守护程序。有什么话想对他说？✨</div>
-                </div>
-                <div class="input-group">
-                    <input type="text" id="user-input" placeholder="输入消息...">
-                            <button id="send-btn">发送</button>
+  <div class="ui-layer">
+    <div class="card">
+      <div style="font-size: 40px;">💖</div>
+      <div style="margin-top:5px; opacity:0.9;">Z & L</div>
 
-                </div>
-            </div>
+      <div class="days-num" id="days">0</div>
+      <div style="font-size:1.2rem; color:#ff6b81;">DAYS</div>
+      <div id="time" class="time-detail">00h 00m 00s</div>
 
-            <div class="footer">SINCE 2025.12.07</div>
+      <div class="chat-zone">
+        <div id="chat-content">
+          <div class="msg left">AI分身: 他睡着啦，我是他的守护程序。有什么话想对他说？✨</div>
         </div>
-        <div class="hint">滑动屏幕试试看，会有星光跟着你 ✨</div>
+
+        <div class="input-group">
+          <input type="text" id="user-input" placeholder="输入消息..." autocomplete="off" />
+          <button id="send-btn">发送</button>
+        </div>
+      </div>
+
+      <div class="footer">SINCE 2025.12.07</div>
     </div>
 
-<script>
-    document.getElementById("send-btn").addEventListener("click", sendToAI);
+    <div class="hint">滑动屏幕试试看，会有星光跟着你 ✨</div>
+  </div>
 
-document.getElementById("user-input").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-        e.preventDefault();   // ⭐ 阻止浏览器默认 GET 行为
-        sendToAI();
+  <script>
+    /***********************
+     * 0) 配置区（你只需要改这里）
+     ***********************/
+    // ✅ 如果前端和后端都在同一个 Vercel 项目：用这个（最稳）
+    const API_URL = "/api/chat";
+
+    // ❗如果你前端在 GitHub Pages，要跨域调用 Vercel，改成下面这行：
+    // const API_URL = "https://our-love-rosy.vercel.app/api/chat";
+
+    const SYSTEM_PROMPT = "你现在是Z的赛博分身。Z正在睡觉，你负责陪他的对象L聊天。语气要温柔，像真人一样自然。";
+
+    /***********************
+     * 1) 小工具：向聊天框追加消息
+     ***********************/
+    function appendMsg(text, side = "left") {
+      const box = document.getElementById("chat-content");
+      const div = document.createElement("div");
+      div.className = `msg ${side}`;
+      div.textContent = text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
     }
-});
 
-    // --- 保持你原有的粒子动画逻辑 ---
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
+    /***********************
+     * 2) 计时逻辑
+     ***********************/
+    function updateTimer() {
+      const start = new Date("2025-12-07T00:00:00");
+      const now = new Date();
+      const diff = now - start;
+
+      document.getElementById("days").innerText = Math.floor(diff / 86400000);
+
+      const h = Math.floor((diff / 3600000) % 24);
+      const m = Math.floor((diff / 60000) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+
+      const hh = h < 10 ? "0" + h : h;
+      const mm = m < 10 ? "0" + m : m;
+      const ss = s < 10 ? "0" + s : s;
+
+      document.getElementById("time").innerText = `${hh}h ${mm}m ${ss}s`;
+    }
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    /***********************
+     * 3) 粒子动画
+     ***********************/
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
     let particles = [];
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    window.onresize = resize; resize();
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resize);
+    resize();
 
     class Particle {
-        constructor(x, y, color) {
-            this.x = x; this.y = y;
-            this.size = Math.random() * 5 + 2;
-            this.speedX = Math.random() * 3 - 1.5;
-            this.speedY = Math.random() * 3 - 1.5;
-            this.color = color; this.opacity = 1;
-        }
-        update() { this.x += this.speedX; this.y += this.speedY; this.opacity -= 0.02; }
-        draw() {
-            ctx.fillStyle = this.color.replace(')', `, ${this.opacity})`).replace('rgb', 'rgba');
-            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-        }
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.size = Math.random() * 5 + 2;
+        this.speedX = Math.random() * 3 - 1.5;
+        this.speedY = Math.random() * 3 - 1.5;
+        this.color = color;
+        this.opacity = 1;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.opacity -= 0.02;
+      }
+      draw() {
+        ctx.fillStyle = this.color.replace(")", `, ${this.opacity})`).replace("rgb", "rgba");
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
     function createParticles(e) {
-        const x = e.touches ? e.touches[0].clientX : e.clientX;
-        const y = e.touches ? e.touches[0].clientY : e.clientY;
-        const color = `rgb(255, ${Math.random()*100+100}, ${Math.random()*100+150})`;
-        for(let i=0; i<3; i++) particles.push(new Particle(x, y, color));
+      const x = e.touches ? e.touches[0].clientX : e.clientX;
+      const y = e.touches ? e.touches[0].clientY : e.clientY;
+      const color = `rgb(255, ${Math.random() * 100 + 100}, ${Math.random() * 100 + 150})`;
+      for (let i = 0; i < 3; i++) particles.push(new Particle(x, y, color));
     }
-    window.addEventListener('mousemove', createParticles);
-    window.addEventListener('touchmove', createParticles);
-    window.addEventListener('mousedown', createParticles);
+
+    window.addEventListener("mousemove", createParticles);
+    window.addEventListener("touchmove", createParticles);
+    window.addEventListener("mousedown", createParticles);
 
     function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for(let i = 0; i < particles.length; i++) {
-            particles[i].update(); particles[i].draw();
-            if(particles[i].opacity <= 0) { particles.splice(i, 1); i--; }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].update();
+        particles[i].draw();
+        if (particles[i].opacity <= 0) {
+          particles.splice(i, 1);
+          i--;
         }
-        requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
     }
     animate();
 
-    // --- 保持你原有的计时逻辑 ---
-    function updateTimer() {
-        const start = new Date('2025-12-07T00:00:00');
-        const now = new Date();
-        const diff = now - start;
-        document.getElementById('days').innerText = Math.floor(diff / 86400000);
-        const h = Math.floor((diff / 3600000) % 24), m = Math.floor((diff / 60000) % 60), s = Math.floor((diff / 1000) % 60);
-        document.getElementById('time').innerText = `${h<10?'0'+h:h}h ${m<10?'0'+m:m}m ${s<10?'0'+s:s}s`;
-    }
-    setInterval(updateTimer, 1000); updateTimer();
+    /***********************
+     * 4) 发送消息到后端
+     ***********************/
+    async function sendToAI() {
+      const input = document.getElementById("user-input");
+      const btn = document.getElementById("send-btn");
 
-    // --- 新增：调用 Vercel 后端接口的逻辑 ---
-   async function sendToAI() {
-    const input = document.getElementById('user-input');
-    const msg = input.value.trim();
-    if (!msg) return;
+      const msg = input.value.trim();
+      if (!msg) return;
 
-    appendMsg(msg, "right", "#fff");
-    input.value = '';
+      appendMsg(msg, "right");
+      input.value = "";
 
-    try {
-        const API_URL = "https://our-love-rosy.vercel.app/api/chat";
+      // 按钮锁定，防止狂点
+      btn.disabled = true;
 
+      // 方便你排查：看看请求会打到哪里
+      console.log("API_URL used:", API_URL);
+      console.log("Page origin:", location.origin);
+
+      try {
         const res = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                messages: [
-                    {
-                        role: "system",
-                        content: "你现在是Z的赛博分身。Z正在睡觉，你负责陪他的对象L聊天。语气要温柔，像真人一样自然。"
-                    },
-                    {
-                        role: "user",
-                        content: msg
-                    }
-                ]
-            })
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [
+              { role: "system", content: SYSTEM_PROMPT },
+              { role: "user", content: msg },
+            ],
+          }),
         });
 
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-            appendMsg(`(API错误 ${res.status})`, "left", "gray");
-            return;
+          // 显示更清晰的错误
+          appendMsg(`(API错误 ${res.status}) ${data?.error || ""}`, "left");
+          console.error("API error:", res.status, data);
+          return;
         }
 
         const reply = data?.choices?.[0]?.message?.content ?? "(AI没有回复)";
-        appendMsg("AI分身: " + reply, "left", "#ffb6c1");
+        appendMsg("AI分身: " + reply, "left");
 
-    } catch (e) {
-        appendMsg("(连接失败，可能是 Vercel 或 Key 问题)", "left", "gray");
+      } catch (e) {
+        appendMsg("(连接失败：请检查 Vercel 部署 / 网络 / CORS)", "left");
+        console.error(e);
+      } finally {
+        btn.disabled = false;
+      }
     }
-}
 
-    function appendMsg(text, align = "left", color = "white") {
-    const box = document.getElementById("chat-content");
-
-    const div = document.createElement("div");
-    div.style.textAlign = align;
-    div.style.margin = "5px 0";
-    div.style.color = color;
-    div.style.opacity = "0.9";
-    div.innerText = text;
-
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-}
-
-</script>
+    document.getElementById("send-btn").addEventListener("click", sendToAI);
+    document.getElementById("user-input").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendToAI();
+      }
+    });
+  </script>
 </body>
 </html>
