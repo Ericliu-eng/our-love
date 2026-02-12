@@ -1,102 +1,71 @@
-// 允许的固定域名
-const ALLOWED_ORIGINS = [
-  "https://ericliu-eng.github.io",   // GitHub Pages
-  "https://our-love-rosy.vercel.app" // 你的 Vercel 主站
-];
-
-// 允许所有 Vercel preview: https://our-love-xxxx.vercel.app
-function isAllowed(origin) {
-  if (!origin) return false;
-  if (ALLOWED_ORIGINS.includes(origin)) return true;
-
-  return /^https:\/\/our-love-[a-z0-9-]+\.vercel\.app$/.test(origin);
-}
-
-export default async function handler(req, res) {
-  const origin = req.headers.origin;
-
-  // ===== CORS =====
-  if (isAllowed(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Vary", "Origin");
+<script>
+  // ✅ 先定义 appendMsg（必须有）
+  function appendMsg(text, align = "left", color = "") {
+    const box = document.getElementById("chat-content");
+    const div = document.createElement("div");
+    div.style.margin = "5px 0";
+    div.style.textAlign = align;
+    if (color) div.style.color = color;
+    div.textContent = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
   }
 
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  async function sendToAI() {
+    // ✅ 这句是“是否触发”的关键：你点发送一定会看到这条
+    appendMsg("[debug] sendToAI triggered", "left", "gray");
 
-  // 预检请求
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
+    const input = document.getElementById("user-input");
+    const msg = input.value.trim();
+    if (!msg) return;
 
-  // 只允许 POST
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
-  }
+    appendMsg(msg, "right");
+    input.value = "";
 
-  // ===== Gemini Key =====
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: "Missing GEMINI_API_KEY" });
-  }
+    try {
+      const API_URL = "https://our-love-rosy.vercel.app/api/chat";
 
-  const model = "gemini-1.5-flash";
-  const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-  // 兼容 body 是字符串
-  const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-
-  const messages = body?.messages || [];
-
-  // ===== 拼接上下文 =====
-  const prompt = messages
-    .map((m) => `${String(m.role || "").toUpperCase()}: ${String(m.content || "")}`)
-    .join("\n");
-
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }],
-          },
-        ],
-      }),
-    });
-
-    const data = await response.json();
-
-    // ===== Gemini 报错直接透传 =====
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: "Gemini API error",
-        details: data,
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            { role: "system", content: "你现在是Z的赛博分身。Z正在睡觉，你负责陪他的对象L聊天。语气要温柔，像真人一样自然。" },
+            { role: "user", content: msg }
+          ]
+        })
       });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        appendMsg(`(API错误 ${res.status}) ${JSON.stringify(data)}`, "left", "gray");
+        return;
+      }
+
+      const reply =
+        data?.choices?.[0]?.message?.content ||
+        data?.raw?.candidates?.[0]?.content?.parts?.map(p => p.text).join("") ||
+        "(AI没有返回内容)";
+
+      appendMsg(`AI分身: ${reply}`, "left", "#ffb6c1");
+
+    } catch (e) {
+      appendMsg(`(前端异常: ${e && e.message ? e.message : e})`, "left", "gray");
     }
-
-    // ===== 安全读取回复 =====
-    const aiReply =
-      data?.candidates?.[0]?.content?.parts
-        ?.map((p) => p.text)
-        .filter(Boolean)
-        .join("") || "";
-
-    // ===== 返回前端（兼容 OpenAI 结构）=====
-    return res.status(200).json({
-      choices: [{ message: { content: aiReply || "(empty reply)" } }],
-      raw: data,
-    });
-
-  } catch (e) {
-    console.error("Gemini Error:", e);
-
-    return res.status(500).json({
-      error: "Gemini request failed",
-      details: String(e),
-    });
   }
-}
+
+  // ✅ 等 DOM 完全就绪再绑定，避免偶发绑定失败
+  window.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("send-btn").addEventListener("click", () => {
+      sendToAI();
+    });
+
+    document.getElementById("user-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendToAI();
+      }
+    });
+  });
+</script>
