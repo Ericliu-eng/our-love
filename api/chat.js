@@ -1,97 +1,119 @@
+// 允许的固定域名
+const ALLOWED_ORIGINS = [
+  "https://ericliu-eng.github.io",   // GitHub Pages
+  "https://our-love-rosy.vercel.app" // 你的 Vercel 主站
+];
+
+// 允许所有 Vercel preview: https://our-love-xxxx.vercel.app
+function isAllowed(origin) {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+
+  return /^https:\/\/our-love-[a-z0-9-]+\.vercel\.app$/.test(origin);
+}
+
 export default async function handler(req, res) {
-  // ===== 1) CORS =====
-  const origin = req.headers.origin || "";
-
-  // 允许的来源：你的 GitHub Pages + 本地 + 任何 vercel.app 预览域名
-  const allowList = new Set([
-    "https://ericliu-eng.github.io",
-    "http://localhost:3000",
-    "http://127.0.0.1:5500",
-    "http://localhost:5500",
-  ]);
-
-  const isVercelPreview =
-    /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin) ||
-    /^https:\/\/[a-z0-9-]+-[a-z0-9-]+\.vercel\.app$/i.test(origin);
-
-  const allowOrigin = allowList.has(origin) || isVercelPreview ? origin : "https://ericliu-eng.github.io";
-
-  res.setHeader("Access-Control-Allow-Origin", allowOrigin);
+  // CORS（建议加，避免某些情况下浏览器预检/跨域问题）
+  res.setHeader("Access-Control-Allow-Origin", "https://ericliu-eng.github.io");
   res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  const origin = req.headers.origin;
+
+  // ===== CORS =====
+  if (isAllowed(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
+
+res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
-
-  // ===== 2) 读取 Key =====
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
-
-  // ===== 3) 解析请求体 =====
-  let body;
-  try {
-    body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-  } catch (e) {
-    return res.status(400).json({ error: "Bad JSON", details: String(e) });
+  // 预检请求
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
   }
 
-  const messages = body?.messages || [];
+  // 只允许 POST
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
+  // ===== Gemini Key =====
+const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: "Missing GEMINI_API_KEY" });
+  if (!apiKey) {
+    return res.status(500).json({ error: "Missing GEMINI_API_KEY" });
+  }
+
+const model = "gemini-1.5-flash";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const url =
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+  // 兼容：有时 req.body 是字符串
+  // 兼容 body 是字符串
+const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+
+const messages = body?.messages || [];
   const systemPrompt = messages.find((m) => m.role === "system")?.content || "";
   const userPrompt = messages.find((m) => m.role === "user")?.content || "";
 
-  // ===== 4) 调 OpenAI Responses API =====
-  try {
-    const model = process.env.OPENAI_MODEL || "gpt-4o"; // gpt-4o 官方模型 :contentReference[oaicite:1]{index=1}
+  // ===== 拼接上下文 =====
+  const prompt = messages
+    .map((m) => `${String(m.role || "").toUpperCase()}: ${String(m.content || "")}`)
+    .join("\n");
 
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        input: [
-          {
-            role: "system",
-            content: systemPrompt || "You are a helpful assistant.",
-          },
-          {
-            role: "user",
-            content: userPrompt,
-          },
-        ],
-        // 可选：控制输出长度
-        max_output_tokens: 300,
-      }),
-    });
+try {
+const response = await fetch(url, {
+@@ -30,35 +62,41 @@ export default async function handler(req, res) {
+contents: [
+{
+role: "user",
+            parts: [{ text: `System: ${systemPrompt}\nUser: ${userPrompt}` }],
+            parts: [{ text: prompt }],
+},
+],
+}),
+});
 
-    const data = await response.json();
+const data = await response.json();
 
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: "OpenAI API error",
+    // ⭐ 关键：Gemini 若返回错误（401/400/429等），直接把错误返回给前端
+    // ===== Gemini 报错直接透传 =====
+if (!response.ok) {
+return res.status(response.status).json({
+error: "Gemini API error",
+        details: data, // 前端能看到真实原因
         details: data,
-      });
-    }
+});
+}
 
-    // Responses API 的安全取文本（兼容多段输出）
-    const reply =
-      data?.output?.[0]?.content
-        ?.map((c) => (typeof c?.text === "string" ? c.text : ""))
-        .filter(Boolean)
-        .join("") ||
-      data?.output_text ||
+    // ⭐ 关键：安全取值，永不读 undefined[0]
+    // ===== 安全读取回复 =====
+const aiReply =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      data?.candidates?.[0]?.content?.parts?.map((p) => p.text).filter(Boolean).join("") ||
       "";
+      data?.candidates?.[0]?.content?.parts
+        ?.map((p) => p.text)
+        .filter(Boolean)
+        .join("") || "";
 
-    // 保持你前端不改：伪装成 OpenAI chat.completions 的 choices 格式
-    return res.status(200).json({
-      choices: [{ message: { content: reply || "(empty reply)" } }],
-      raw: data,
+    // 仍然伪装成 OpenAI 格式，保持你 index.html 不用改
+    // ===== 返回前端（兼容 OpenAI 结构）=====
+return res.status(200).json({
+choices: [{ message: { content: aiReply || "(empty reply)" } }],
+raw: data,
+});
+
+} catch (e) {
+console.error("Gemini Error:", e);
+    return res.status(500).json({ error: "Gemini 暂时迷路了...", details: String(e) });
+
+    return res.status(500).json({
+      error: "Gemini request failed",
+      details: String(e),
     });
-  } catch (e) {
-    console.error("OpenAI Error:", e);
-    return res.status(500).json({ error: "OpenAI 暂时迷路了...", details: String(e) });
-  }
+}
 }
