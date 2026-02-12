@@ -102,110 +102,76 @@
     </div>
 
 <script>
-    document.getElementById("send-btn").addEventListener("click", sendToAI);
+  // ✅ 先定义 appendMsg（必须有）
+  function appendMsg(text, align = "left", color = "") {
+    const box = document.getElementById("chat-content");
+    const div = document.createElement("div");
+    div.style.margin = "5px 0";
+    div.style.textAlign = align;
+    if (color) div.style.color = color;
+    div.textContent = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
 
-document.getElementById("user-input").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-        e.preventDefault();   // ⭐ 阻止浏览器默认 GET 行为
-        sendToAI();
+  async function sendToAI() {
+    // ✅ 这句是“是否触发”的关键：你点发送一定会看到这条
+    appendMsg("[debug] sendToAI triggered", "left", "gray");
+
+    const input = document.getElementById("user-input");
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    appendMsg(msg, "right");
+    input.value = "";
+
+    try {
+      const API_URL = "https://our-love-rosy.vercel.app/api/chat";
+
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            { role: "system", content: "你现在是Z的赛博分身。Z正在睡觉，你负责陪他的对象L聊天。语气要温柔，像真人一样自然。" },
+            { role: "user", content: msg }
+          ]
+        })
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        appendMsg(`(API错误 ${res.status}) ${JSON.stringify(data)}`, "left", "gray");
+        return;
+      }
+
+      const reply =
+        data?.choices?.[0]?.message?.content ||
+        data?.raw?.candidates?.[0]?.content?.parts?.map(p => p.text).join("") ||
+        "(AI没有返回内容)";
+
+      appendMsg(`AI分身: ${reply}`, "left", "#ffb6c1");
+
+    } catch (e) {
+      appendMsg(`(前端异常: ${e && e.message ? e.message : e})`, "left", "gray");
     }
-});
+  }
 
-    // --- 保持你原有的粒子动画逻辑 ---
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    window.onresize = resize; resize();
-
-    class Particle {
-        constructor(x, y, color) {
-            this.x = x; this.y = y;
-            this.size = Math.random() * 5 + 2;
-            this.speedX = Math.random() * 3 - 1.5;
-            this.speedY = Math.random() * 3 - 1.5;
-            this.color = color; this.opacity = 1;
-        }
-        update() { this.x += this.speedX; this.y += this.speedY; this.opacity -= 0.02; }
-        draw() {
-            ctx.fillStyle = this.color.replace(')', `, ${this.opacity})`).replace('rgb', 'rgba');
-            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-        }
-    }
-
-    function createParticles(e) {
-        const x = e.touches ? e.touches[0].clientX : e.clientX;
-        const y = e.touches ? e.touches[0].clientY : e.clientY;
-        const color = `rgb(255, ${Math.random()*100+100}, ${Math.random()*100+150})`;
-        for(let i=0; i<3; i++) particles.push(new Particle(x, y, color));
-    }
-    window.addEventListener('mousemove', createParticles);
-    window.addEventListener('touchmove', createParticles);
-    window.addEventListener('mousedown', createParticles);
-
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for(let i = 0; i < particles.length; i++) {
-            particles[i].update(); particles[i].draw();
-            if(particles[i].opacity <= 0) { particles.splice(i, 1); i--; }
-        }
-        requestAnimationFrame(animate);
-    }
-    animate();
-
-    // --- 保持你原有的计时逻辑 ---
-    function updateTimer() {
-        const start = new Date('2025-12-07T00:00:00');
-        const now = new Date();
-        const diff = now - start;
-        document.getElementById('days').innerText = Math.floor(diff / 86400000);
-        const h = Math.floor((diff / 3600000) % 24), m = Math.floor((diff / 60000) % 60), s = Math.floor((diff / 1000) % 60);
-        document.getElementById('time').innerText = `${h<10?'0'+h:h}h ${m<10?'0'+m:m}m ${s<10?'0'+s:s}s`;
-    }
-    setInterval(updateTimer, 1000); updateTimer();
-
-    // --- 新增：调用 Vercel 后端接口的逻辑 ---
-async function sendToAI() {
-  const input = document.getElementById('user-input');
-  const msg = input.value.trim();
-  if(!msg) return;
-
-  appendMsg(msg, "right");
-  input.value = '';
-
-  try {
-    const API_URL = "https://our-love-rosy.vercel.app/api/chat";
-
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messages: [
-          { role: "system", content: "你现在是Z的赛博分身。Z正在睡觉，你负责陪他的对象L聊天。语气要温柔，像真人一样自然。" },
-          { role: "user", content: msg }
-        ]
-      })
+  // ✅ 等 DOM 完全就绪再绑定，避免偶发绑定失败
+  window.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("send-btn").addEventListener("click", () => {
+      sendToAI();
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      appendMsg(`(API错误 ${res.status}) ${JSON.stringify(data)}`, "left", "gray");
-      return;
-    }
-
-    const reply =
-      data?.choices?.[0]?.message?.content ||
-      data?.raw?.candidates?.[0]?.content?.parts?.map(p => p.text).join("") ||
-      "(AI没有返回内容)";
-
-    appendMsg(`AI分身: ${reply}`, "left", "#ffb6c1");
-
-  } catch (e) {
-    appendMsg(`(前端异常: ${e.message})`, "left", "gray");
-  }
-}
-
+    document.getElementById("user-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendToAI();
+      }
+    });
+  });
 </script>
+
 </body>
 </html>
