@@ -1,6 +1,8 @@
 export default async function handler(req, res) {
   // CORS（建议加，避免某些情况下浏览器预检/跨域问题）
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin", "https://ericliu-eng.github.io");
+  res.setHeader("Vary", "Origin");
+
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
