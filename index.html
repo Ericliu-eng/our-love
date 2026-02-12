@@ -197,17 +197,24 @@ document.getElementById("user-input").addEventListener("keydown", function (e) {
 
     const data = await res.json();
 
+    // ⭐ 如果 API 报错，直接显示
     if (!res.ok) {
         appendMsg(`(API错误 ${res.status}) ${JSON.stringify(data)}`, "left", "gray");
         return;
     }
 
-    const reply = data?.choices?.[0]?.message?.content ?? "(AI没有回复)";
+    // ⭐ 永远不会炸的安全读取
+    const reply =
+        data?.choices?.[0]?.message?.content ||
+        data?.raw?.candidates?.[0]?.content?.parts?.map(p => p.text).join("") ||
+        "(AI没有返回内容)";
+
     appendMsg(`AI分身: ${reply}`, "left", "#ffb6c1");
 
 } catch (e) {
-    appendMsg("(连接失败，请检查 Vercel 是否部署成功)", "left", "gray");
+    appendMsg(`(前端异常: ${e.message})`, "left", "gray");
 }
+
     }
 </script>
 </body>
