@@ -175,25 +175,39 @@ document.getElementById("user-input").addEventListener("keydown", function (e) {
         input.value = '';
         box.scrollTop = box.scrollHeight;
 
-        try {
-            // 注意：这里请求的是你自己写的 /api/chat 接口，不需要 API Key
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    messages: [
-                        { "role": "system", "content": "你现在是Z的赛博分身。Z正在睡觉，你负责陪他的对象L聊天。语气要温柔，像真人一样自然。" },
-                        { "role": "user", "content": msg }
-                    ]
-                })
-            });
-            const data = await res.json();
-            const reply = data.choices[0].message.content;
-            box.innerHTML += `<div style="color: #ffb6c1; margin: 5px 0;">AI分身: ${reply}</div>`;
-            box.scrollTop = box.scrollHeight;
-        } catch (e) {
-            box.innerHTML += `<div style="color: gray; font-size: 0.7rem;">(连接中断，请检查后端配置)</div>`;
-        }
+      try {
+    const API_URL = "https://our-love-rosy.vercel.app/api/chat";
+
+    const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            messages: [
+                {
+                    role: "system",
+                    content: "你现在是Z的赛博分身。Z正在睡觉，你负责陪他的对象L聊天。语气要温柔，像真人一样自然。"
+                },
+                {
+                    role: "user",
+                    content: msg
+                }
+            ]
+        })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        appendMsg(`(API错误 ${res.status}) ${JSON.stringify(data)}`, "left", "gray");
+        return;
+    }
+
+    const reply = data?.choices?.[0]?.message?.content ?? "(AI没有回复)";
+    appendMsg(`AI分身: ${reply}`, "left", "#ffb6c1");
+
+} catch (e) {
+    appendMsg("(连接失败，请检查 Vercel 是否部署成功)", "left", "gray");
+}
     }
 </script>
 </body>
