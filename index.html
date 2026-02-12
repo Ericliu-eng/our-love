@@ -90,8 +90,9 @@
                     <div style="color: #ffb6c1;">AI分身: 他睡着啦，我是他的守护程序。有什么话想对他说？✨</div>
                 </div>
                 <div class="input-group">
-                    <input type="text" id="user-input" placeholder="输入消息..." onkeypress="if(event.keyCode==13) sendToAI()">
-                    <button onclick="sendToAI()">发送</button>
+                    <input type="text" id="user-input" placeholder="输入消息...">
+                            <button id="send-btn">发送</button>
+
                 </div>
             </div>
 
@@ -101,6 +102,15 @@
     </div>
 
 <script>
+    document.getElementById("send-btn").addEventListener("click", sendToAI);
+
+document.getElementById("user-input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+        e.preventDefault();   // ⭐ 阻止浏览器默认 GET 行为
+        sendToAI();
+    }
+});
+
     // --- 保持你原有的粒子动画逻辑 ---
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
