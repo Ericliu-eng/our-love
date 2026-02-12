@@ -1,55 +1,42 @@
-// 允许的固定域名
 const ALLOWED_ORIGINS = [
-  "https://ericliu-eng.github.io",   // GitHub Pages
-  "https://our-love-rosy.vercel.app" // 你的 Vercel 主站
+  "https://ericliu-eng.github.io",
+  "https://our-love-rosy.vercel.app",
 ];
 
-// 允许所有 Vercel preview: https://our-love-xxxx.vercel.app
 function isAllowed(origin) {
   if (!origin) return false;
   if (ALLOWED_ORIGINS.includes(origin)) return true;
-
   return /^https:\/\/our-love-[a-z0-9-]+\.vercel\.app$/.test(origin);
 }
 
 export default async function handler(req, res) {
   const origin = req.headers.origin;
 
-  // ===== CORS =====
+  // 预检请求也要走同样 CORS 逻辑
   if (isAllowed(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
+  } else if (origin) {
+    // 有 origin 但不在白名单：直接拒绝，方便你排错
+    return res.status(403).json({ error: "CORS blocked", origin });
   }
 
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // 预检请求
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
-
-  // 只允许 POST
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
-  }
+  if (req.method === "OPTIONS") return res.status(204).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
   // ===== Gemini Key =====
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: "Missing GEMINI_API_KEY" });
-  }
+  if (!apiKey) return res.status(500).json({ error: "Missing GEMINI_API_KEY" });
 
   const model = "gemini-1.5-flash";
-  const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-  // 兼容 body 是字符串
   const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-
   const messages = body?.messages || [];
 
-  // ===== 拼接上下文 =====
   const prompt = messages
     .map((m) => `${String(m.role || "").toUpperCase()}: ${String(m.content || "")}`)
     .join("\n");
@@ -59,44 +46,24 @@ export default async function handler(req, res) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }],
-          },
-        ],
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
       }),
     });
 
     const data = await response.json();
 
-    // ===== Gemini 报错直接透传 =====
     if (!response.ok) {
-      return res.status(response.status).json({
-        error: "Gemini API error",
-        details: data,
-      });
+      return res.status(response.status).json({ error: "Gemini API error", details: data });
     }
 
-    // ===== 安全读取回复 =====
     const aiReply =
-      data?.candidates?.[0]?.content?.parts
-        ?.map((p) => p.text)
-        .filter(Boolean)
-        .join("") || "";
+      data?.candidates?.[0]?.content?.parts?.map((p) => p.text).filter(Boolean).join("") || "";
 
-    // ===== 返回前端（兼容 OpenAI 结构）=====
     return res.status(200).json({
       choices: [{ message: { content: aiReply || "(empty reply)" } }],
       raw: data,
     });
-
   } catch (e) {
-    console.error("Gemini Error:", e);
-
-    return res.status(500).json({
-      error: "Gemini request failed",
-      details: String(e),
-    });
+    return res.status(500).json({ error: "Gemini request failed", details: String(e) });
   }
 }
