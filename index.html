@@ -228,62 +228,29 @@
     /***********************
      * 4) 发送消息到后端
      ***********************/
-    async function sendToAI() {
-      const input = document.getElementById("user-input");
-      const btn = document.getElementById("send-btn");
+async function askGemini() {
+    const promptInput = document.getElementById('prompt').value;
+    const responseDiv = document.getElementById('response');
+    
+    responseDiv.innerText = "正在通过 Vercel 转发请求...";
 
-      const msg = input.value.trim();
-      if (!msg) return;
-
-      appendMsg(msg, "right");
-      input.value = "";
-
-      // 按钮锁定，防止狂点
-      btn.disabled = true;
-
-      // 方便你排查：看看请求会打到哪里
-      console.log("API_URL used:", API_URL);
-      console.log("Page origin:", location.origin);
-
-      try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            messages: [
-              { role: "system", content: SYSTEM_PROMPT },
-              { role: "user", content: msg },
-            ],
-          }),
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: promptInput })
         });
 
-        const data = await res.json().catch(() => ({}));
-
-        if (!res.ok) {
-          // 显示更清晰的错误
-          appendMsg(`(API错误 ${res.status}) ${data?.error || ""}`, "left");
-          console.error("API error:", res.status, data);
-          return;
+        const data = await response.json();
+        if (data.text) {
+            responseDiv.innerText = data.text;
+        } else {
+            responseDiv.innerText = "发生错误: " + data.error;
         }
-
-        const reply = data?.choices?.[0]?.message?.content ?? "(AI没有回复)";
-        appendMsg("AI分身: " + reply, "left");
-
-      } catch (e) {
-        appendMsg("(连接失败：请检查 Vercel 部署 / 网络 / CORS)", "left");
-        console.error(e);
-      } finally {
-        btn.disabled = false;
-      }
+    } catch (error) {
+        responseDiv.innerText = "网络错误: " + error.message;
     }
-
-    document.getElementById("send-btn").addEventListener("click", sendToAI);
-    document.getElementById("user-input").addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        sendToAI();
-      }
-    });
+}
   </script>
 </body>
 </html>
