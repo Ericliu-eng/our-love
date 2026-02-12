@@ -102,75 +102,87 @@
     </div>
 
 <script>
-  // ✅ 先定义 appendMsg（必须有）
-  function appendMsg(text, align = "left", color = "") {
-    const box = document.getElementById("chat-content");
-    const div = document.createElement("div");
-    div.style.margin = "5px 0";
-    div.style.textAlign = align;
-    if (color) div.style.color = color;
-    div.textContent = text;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-  }
+ // --- 辅助函数：将消息渲染到聊天框 ---
+function appendMsg(text, align = "left", color = "") {
+  const box = document.getElementById("chat-content");
+  if (!box) return;
+  
+  const div = document.createElement("div");
+  div.style.margin = "8px 0";
+  div.style.textAlign = align;
+  div.style.wordBreak = "break-all"; // 防止长文字撑破布局
+  if (color) div.style.color = color;
+  
+  div.textContent = text;
+  box.appendChild(div);
+  
+  // 滚动到底部
+  box.scrollTop = box.scrollHeight;
+}
 
-  async function sendToAI() {
-    // ✅ 这句是“是否触发”的关键：你点发送一定会看到这条
-    appendMsg("[debug] sendToAI triggered", "left", "gray");
+// --- 核心函数：发送请求到 Vercel 后端 ---
+async function sendToAI() {
+  const input = document.getElementById("user-input");
+  const msg = input.value.trim();
+  
+  if (!msg) return;
 
-    const input = document.getElementById("user-input");
-    const msg = input.value.trim();
-    if (!msg) return;
+  // 1. 显示用户发送的内容
+  appendMsg(msg, "right");
+  input.value = ""; // 清空输入框
+  
+  // 2. 显示加载状态
+  const loadingId = "msg-" + Date.now();
+  appendMsg("AI 正在思考...", "left", "gray");
 
-    appendMsg(msg, "right");
-    input.value = "";
+  try {
+    // 替换为你真实的 Vercel 部署地址
+    const API_URL = "https://our-love-rosy.vercel.app/api/chat";
 
-    try {
-      const API_URL = "https://our-love-rosy.vercel.app/api/chat";
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        messages: [
+          { role: "system", content: "你现在是Z的赛博分身。Z正在睡觉，你负责陪他的对象L聊天。语气要温柔，像真人一样自然。" },
+          { role: "user", content: msg }
+        ]
+      })
+    });
 
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [
-            { role: "system", content: "你现在是Z的赛博分身。Z正在睡觉，你负责陪他的对象L聊天。语气要温柔，像真人一样自然。" },
-            { role: "user", content: msg }
-          ]
-        })
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        appendMsg(`(API错误 ${res.status}) ${JSON.stringify(data)}`, "left", "gray");
-        return;
-      }
-
-      const reply =
-        data?.choices?.[0]?.message?.content ||
-        data?.raw?.candidates?.[0]?.content?.parts?.map(p => p.text).join("") ||
-        "(AI没有返回内容)";
-
-      appendMsg(`AI分身: ${reply}`, "left", "#ffb6c1");
-
-    } catch (e) {
-      appendMsg(`(前端异常: ${e && e.message ? e.message : e})`, "left", "gray");
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${res.status}`);
     }
+
+    const data = await res.json();
+    const reply = data?.choices?.[0]?.message?.content || "AI 忙累了，没说话。";
+
+    // 3. 显示 AI 回复
+    appendMsg(`AI分身: ${reply}`, "left", "#ffb6c1");
+
+  } catch (e) {
+    console.error("Fetch Error:", e);
+    appendMsg(`(连接失败: ${e.message})`, "left", "#ff4d4d");
   }
+}
 
-  // ✅ 等 DOM 完全就绪再绑定，避免偶发绑定失败
-  window.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("send-btn").addEventListener("click", () => {
+// --- 事件绑定 ---
+window.addEventListener("DOMContentLoaded", () => {
+  const sendBtn = document.getElementById("send-btn");
+  const userInput = document.getElementById("user-input");
+
+  sendBtn.addEventListener("click", sendToAI);
+
+  userInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
       sendToAI();
-    });
-
-    document.getElementById("user-input").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        sendToAI();
-      }
-    });
+    }
   });
+});
 </script>
 
 </body>
