@@ -165,57 +165,47 @@ document.getElementById("user-input").addEventListener("keydown", function (e) {
     setInterval(updateTimer, 1000); updateTimer();
 
     // --- 新增：调用 Vercel 后端接口的逻辑 ---
-    async function sendToAI() {
-        const input = document.getElementById('user-input');
-        const box = document.getElementById('chat-content');
-        const msg = input.value.trim();
-        if(!msg) return;
+async function sendToAI() {
+  const input = document.getElementById('user-input');
+  const msg = input.value.trim();
+  if(!msg) return;
 
-        box.innerHTML += `<div style="text-align:right; margin: 5px 0; opacity:0.8;">${msg}</div>`;
-        input.value = '';
-        box.scrollTop = box.scrollHeight;
+  appendMsg(msg, "right");
+  input.value = '';
 
-      try {
+  try {
     const API_URL = "https://our-love-rosy.vercel.app/api/chat";
 
     const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            messages: [
-                {
-                    role: "system",
-                    content: "你现在是Z的赛博分身。Z正在睡觉，你负责陪他的对象L聊天。语气要温柔，像真人一样自然。"
-                },
-                {
-                    role: "user",
-                    content: msg
-                }
-            ]
-        })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [
+          { role: "system", content: "你现在是Z的赛博分身。Z正在睡觉，你负责陪他的对象L聊天。语气要温柔，像真人一样自然。" },
+          { role: "user", content: msg }
+        ]
+      })
     });
 
     const data = await res.json();
 
-    // ⭐ 如果 API 报错，直接显示
     if (!res.ok) {
-        appendMsg(`(API错误 ${res.status}) ${JSON.stringify(data)}`, "left", "gray");
-        return;
+      appendMsg(`(API错误 ${res.status}) ${JSON.stringify(data)}`, "left", "gray");
+      return;
     }
 
-    // ⭐ 永远不会炸的安全读取
     const reply =
-        data?.choices?.[0]?.message?.content ||
-        data?.raw?.candidates?.[0]?.content?.parts?.map(p => p.text).join("") ||
-        "(AI没有返回内容)";
+      data?.choices?.[0]?.message?.content ||
+      data?.raw?.candidates?.[0]?.content?.parts?.map(p => p.text).join("") ||
+      "(AI没有返回内容)";
 
     appendMsg(`AI分身: ${reply}`, "left", "#ffb6c1");
 
-} catch (e) {
+  } catch (e) {
     appendMsg(`(前端异常: ${e.message})`, "left", "gray");
+  }
 }
 
-    }
 </script>
 </body>
 </html>
