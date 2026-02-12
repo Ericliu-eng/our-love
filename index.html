@@ -165,50 +165,63 @@ document.getElementById("user-input").addEventListener("keydown", function (e) {
     setInterval(updateTimer, 1000); updateTimer();
 
     // --- 新增：调用 Vercel 后端接口的逻辑 ---
-    async function sendToAI() {
-        const input = document.getElementById('user-input');
-        const box = document.getElementById('chat-content');
-        const msg = input.value.trim();
-        if(!msg) return;
+   async function sendToAI() {
+    const input = document.getElementById('user-input');
+    const msg = input.value.trim();
+    if (!msg) return;
 
-        box.innerHTML += `<div style="text-align:right; margin: 5px 0; opacity:0.8;">${msg}</div>`;
-        input.value = '';
-        box.scrollTop = box.scrollHeight;
+    appendMsg(msg, "right", "#fff");
+    input.value = '';
 
-      try {
-    const API_URL = "https://our-love-rosy.vercel.app/api/chat";
+    try {
+        const API_URL = "https://our-love-rosy.vercel.app/api/chat";
 
-    const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            messages: [
-                {
-                    role: "system",
-                    content: "你现在是Z的赛博分身。Z正在睡觉，你负责陪他的对象L聊天。语气要温柔，像真人一样自然。"
-                },
-                {
-                    role: "user",
-                    content: msg
-                }
-            ]
-        })
-    });
+        const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                messages: [
+                    {
+                        role: "system",
+                        content: "你现在是Z的赛博分身。Z正在睡觉，你负责陪他的对象L聊天。语气要温柔，像真人一样自然。"
+                    },
+                    {
+                        role: "user",
+                        content: msg
+                    }
+                ]
+            })
+        });
 
-    const data = await res.json();
+        const data = await res.json();
 
-    if (!res.ok) {
-        appendMsg(`(API错误 ${res.status}) ${JSON.stringify(data)}`, "left", "gray");
-        return;
+        if (!res.ok) {
+            appendMsg(`(API错误 ${res.status})`, "left", "gray");
+            return;
+        }
+
+        const reply = data?.choices?.[0]?.message?.content ?? "(AI没有回复)";
+        appendMsg("AI分身: " + reply, "left", "#ffb6c1");
+
+    } catch (e) {
+        appendMsg("(连接失败，可能是 Vercel 或 Key 问题)", "left", "gray");
     }
-
-    const reply = data?.choices?.[0]?.message?.content ?? "(AI没有回复)";
-    appendMsg(`AI分身: ${reply}`, "left", "#ffb6c1");
-
-} catch (e) {
-    appendMsg("(连接失败，请检查 Vercel 是否部署成功)", "left", "gray");
 }
-    }
+
+    function appendMsg(text, align = "left", color = "white") {
+    const box = document.getElementById("chat-content");
+
+    const div = document.createElement("div");
+    div.style.textAlign = align;
+    div.style.margin = "5px 0";
+    div.style.color = color;
+    div.style.opacity = "0.9";
+    div.innerText = text;
+
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
+
 </script>
 </body>
 </html>
