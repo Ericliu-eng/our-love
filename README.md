@@ -128,23 +128,17 @@ make migrate
 ---
 
 ## CI
-### GitHub Actions automatically runs:
+#### GitHub Actions automatically runs:
 ```bash
 make lint
 make test
 ```
-on every pull request.
---- 
+#### on every pull request.
+----
 
-
-🎯 Why this project
-
-This project demonstrates:
-
-Data Engineering best practices (modularity, testing, CI)
-
-Reproducible pipelines using Makefile
-
-Database-backed workflows with migration
-
-Foundations for scaling into MLOps / production systems
+## Why this project
+#### This project demonstrates:
+  - Data Engineering best practices (modularity, testing, CI)
+  - Reproducible pipelines using Makefile
+  - Database-backed workflows with migration
+  - Foundations for scaling into MLOps / production systems
