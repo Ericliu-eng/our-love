@@ -12,10 +12,8 @@ It is designed to demonstrate:
 - Modular pipeline design
 - Database integration (Postgres)
 - CI-tested data pipelines
-
 ---
-
-## 🏗️ Architecture
+##  Architecture
 
 Pipeline flow:
 data/raw/*.csv
