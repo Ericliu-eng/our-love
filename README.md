@@ -77,18 +77,15 @@ make test
 ---
 
 ## Example
-```markdown
 Input (data/raw/sample.csv)
 name,amount
 A,10
 B,-5
 ,20
-```
 Output (data/processed/output.csv)
-```makedown
 name,amount
 A,10
-```
+
 ---
 
 ## Database Schema
