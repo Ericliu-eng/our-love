@@ -37,7 +37,7 @@ Postgres (tables via migration)
   - Insert into Postgres tables
 ---
 
-##Quickstart
+##     Quickstart
 ```bash
 cp .env.example .env
 make setup
