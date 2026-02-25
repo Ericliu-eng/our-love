@@ -28,11 +28,11 @@ Postgres (tables via migration)
 ------
 
 ### Components
-> **Extract**: Read raw CSV data
-> **Transform**:
+- **Extract**: Read raw CSV data
+- **Transform**:
   - Drop null values
   - Filter invalid rows (e.g., negative values)
-> **Load**:
+- **Load**:
   - Save processed CSV
   - Insert into Postgres tables
 ---
@@ -46,16 +46,16 @@ make test
 make run
 ```
 ---
-## Database (Postgres)
 
-Start DB  make db-up
-Run migration  make migrate
-Smoke test  make smoke
-Reset DB
-make db-down
+### 🗄️ Database (Postgres)
+
+### Start the database
+```bash
 make db-up
+Run migrations
 make migrate
-
+Smoke test
+make smoke
 🧪 Testing
 
 This project includes multiple layers of testing:
