@@ -107,7 +107,7 @@ scripts/                     # migration scripts
 tests/                       # unit + smoke tests
 data/                        # raw + processed data
 docs/                        # proof / logs
-```markdown
+```
 
 ---
 
