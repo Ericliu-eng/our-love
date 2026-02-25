@@ -37,7 +37,7 @@ Postgres (tables via migration)
   - Insert into Postgres tables
 ---
 
-##     Quickstart
+## Quickstart
 ```bash
 cp .env.example .env
 make setup
@@ -47,7 +47,7 @@ make run
 ```
 ---
 
-### Database (Postgres)
+## Database (Postgres)
 Start DB:
 ```bash
 make db-up
@@ -61,36 +61,44 @@ Smoke test
 make smoke
 ```
 ---
-### Testing
+## Testing
 This project includes multiple layers of testing:
-#### Unit Tests
+### Unit Tests
   - Transform logic validation
   - Edge cases (nulls, invalid values)
-#### Smoke Tests
+## Smoke Tests
   - End-to-end pipeline execution (tmp_path)
   - Database connectivity (test_db_smoke.py)
-#### Run all tests:
+### Run all tests:
 ```bash
 make test
 ```
-###Example
+---
+
+## Example
+```markdown
 Input (data/raw/sample.csv)
 name,amount
 A,10
 B,-5
 ,20
+```
 Output (data/processed/output.csv)
+```makedown
 name,amount
 A,10
-🧱 Database Schema
+```
+---
 
-Example table (via migration):
+## Database Schema
+### Example table (via migration):
+- users
+  - id (int)
+  -name (text)
 
-users
 
-id (int)
 
-name (text)
+
 
 amount (int)
 
