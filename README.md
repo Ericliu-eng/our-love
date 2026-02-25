@@ -64,13 +64,13 @@ make smoke
 
 ## Testing
 This project includes multiple layers of testing:
-### Unit Tests
+##### Unit Tests
   - Transform logic validation
   - Edge cases (nulls, invalid values)
-## Smoke Tests
+##### Smoke Tests
   - End-to-end pipeline execution (tmp_path)
   - Database connectivity (test_db_smoke.py)
-### Run all tests:
+##### Run all tests:
 ```bash
 make test
 ```
@@ -92,12 +92,12 @@ A,10
 ---
 
 ## Database Schema
-### Example table (via migration):
+##### Example table (via migration):
 - users
   - id (int)
   - name (text)
   - amount (int)
-### Created using:
+##### Created using:
 ```bash
 make migrate
 ```
@@ -114,7 +114,7 @@ docs/                        # proof / logs
 ---
 
 ## Reproducibility
-### All workflows are standardized via Makefile:
+##### All workflows are standardized via Makefile:
 ```bash
 make setup
 make lint
@@ -122,22 +122,22 @@ make test
 make run
 make migrate
 ```
-### Works consistently across:
+##### Works consistently across:
  - Local environment
  - CI (GitHub Actions)
 ---
 
 ## CI
-#### GitHub Actions automatically runs:
+##### GitHub Actions automatically runs:
 ```bash
 make lint
 make test
 ```
-#### on every pull request.
+##### on every pull request.
 ----
 
 ## Why this project
-#### This project demonstrates:
+##### This project demonstrates:
   - Data Engineering best practices (modularity, testing, CI)
   - Reproducible pipelines using Makefile
   - Database-backed workflows with migration
