@@ -19,7 +19,8 @@ graph TD
     A[data/raw/*.csv] --> B(Transform: Clean/Filter)
     B --> C[data/processed/output.csv]
     B --> D[(Postgres DB)]
-------
+    
+---
 
 ## Components
 - **Extract**: Read raw CSV data
@@ -35,9 +36,10 @@ graph TD
 ```bash
 cp .env.example .env
 make setup
-make lint
-make test
+make db-up
+make migrate
 make run
+make test
 ```
 ---
 
