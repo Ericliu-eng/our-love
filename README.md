@@ -47,15 +47,19 @@ make run
 ```
 ---
 
-### 🗄️ Database (Postgres)
-
-### Start the database
+### Database (Postgres)
+Start DB:
 ```bash
 make db-up
-Run migrations
+```
+Run migrations:
+```bash
 make migrate
+```
 Smoke test
+```bash
 make smoke
+```
 🧪 Testing
 
 This project includes multiple layers of testing:
