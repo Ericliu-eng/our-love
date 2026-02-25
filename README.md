@@ -64,13 +64,13 @@ make smoke
 
 ## Testing
 This project includes multiple layers of testing:
-##### Unit Tests
+#### Unit Tests
   - Transform logic validation
   - Edge cases (nulls, invalid values)
-##### Smoke Tests
+#### Smoke Tests
   - End-to-end pipeline execution (tmp_path)
   - Database connectivity (test_db_smoke.py)
-##### Run all tests:
+#### Run all tests:
 ```bash
 make test
 ```
@@ -101,13 +101,13 @@ make migrate
 ---
 
 ## Project Structure
-```markdown
+
 src/de_lakehouse_pipeline/   # pipeline logic
 scripts/                     # migration scripts
 tests/                       # unit + smoke tests
 data/                        # raw + processed data
 docs/                        # proof / logs
-```
+
 ---
 
 ## Reproducibility
