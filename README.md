@@ -64,8 +64,7 @@ make smoke
 ### Testing
 This project includes multiple layers of testing:
 #### Unit Tests
--Transform logic validation
-
+  - Transform logic validation
 Edge cases (nulls, invalid values)
 
 Smoke Tests
