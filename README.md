@@ -89,24 +89,25 @@ A,10
 ---
 
 ## Database Schema
-##### Example table (via migration):
+#### Example table (via migration):
 - users
   - id (int)
   - name (text)
   - amount (int)
-##### Created using:
+#### Created using:
 ```bash
 make migrate
 ```
 ---
 
 ## Project Structure
-
+```markdown 
 src/de_lakehouse_pipeline/   # pipeline logic
 scripts/                     # migration scripts
 tests/                       # unit + smoke tests
 data/                        # raw + processed data
 docs/                        # proof / logs
+```markdown
 
 ---
 
@@ -119,22 +120,22 @@ make test
 make run
 make migrate
 ```
-##### Works consistently across:
+#### Works consistently across:
  - Local environment
  - CI (GitHub Actions)
 ---
 
 ## CI
-##### GitHub Actions automatically runs:
+#### GitHub Actions automatically runs:
 ```bash
 make lint
 make test
 ```
-##### on every pull request.
+#### on every pull request.
 ----
 
 ## Why this project
-##### This project demonstrates:
+#### This project demonstrates:
   - Data Engineering best practices (modularity, testing, CI)
   - Reproducible pipelines using Makefile
   - Database-backed workflows with migration
