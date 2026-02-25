@@ -15,16 +15,10 @@ It is designed to demonstrate:
 ---
 
 ##  Architecture
-```markdown 
-Pipeline flow:
-data/raw/*.csv
-↓
-Transform (clean/filter)
-↓
-data/processed/output.csv
-↓
-Postgres (tables via migration)
-```
+graph TD
+    A[data/raw/*.csv] --> B(Transform: Clean/Filter)
+    B --> C[data/processed/output.csv]
+    B --> D[(Postgres DB)]
 ------
 
 ## Components
