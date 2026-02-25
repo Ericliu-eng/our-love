@@ -15,7 +15,7 @@ It is designed to demonstrate:
 ---
 
 ##  Architecture
-```markdown
+
 Pipeline flow:
 data/raw/*.csv
 ↓
@@ -24,7 +24,7 @@ Transform (clean/filter)
 data/processed/output.csv
 ↓
 Postgres (tables via migration)
-```
+
 
 ### Components
 
