@@ -74,14 +74,10 @@ make test
 ---
 
 ## Example
-Input (data/raw/sample.csv)
-name,amount
-A,10
-B,-5
-,20
-Output (data/processed/output.csv)
-name,amount
-A,10
+| Stage | Data Sample |
+| :--- | :--- |
+| **Input** (`data/raw/sample.csv`) | `name,amount`<br>`A,10`<br>`B,-5`<br>`,20` |
+| **Output** (`data/processed/output.csv`) | `name,amount`<br>`A,10` |
 
 ---
 
