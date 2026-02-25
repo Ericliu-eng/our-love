@@ -114,34 +114,28 @@ docs/                        # proof / logs
 ---
 
 ## Reproducibility
-All workflows are standardized via Makefile:
+### All workflows are standardized via Makefile:
 ```bash
-- make setup
-- make lint
-- make test
-- make run
-- make migrate
-```
-
-
-
-
-
-Works consistently across:
-
-Local environment
-
-CI (GitHub Actions)
-
-🔁 CI
-
-GitHub Actions automatically runs:
-
+make setup
 make lint
-
 make test
+make run
+make migrate
+```
+### Works consistently across:
+ - Local environment
+ - CI (GitHub Actions)
+---
 
+## CI
+### GitHub Actions automatically runs:
+```bash
+make lint
+make test
+```
 on every pull request.
+--- 
+
 
 🎯 Why this project
 
