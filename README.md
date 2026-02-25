@@ -13,8 +13,9 @@ It is designed to demonstrate:
 - Database integration (Postgres)
 - CI-tested data pipelines
 ---
-##  Architecture
 
+##  Architecture
+```markdown
 Pipeline flow:
 data/raw/*.csv
 ↓
@@ -23,7 +24,7 @@ Transform (clean/filter)
 data/processed/output.csv
 ↓
 Postgres (tables via migration)
-
+```
 
 ### Components
 
