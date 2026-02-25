@@ -4,12 +4,9 @@ A lakehouse-style data engineering pipeline with reproducible workflows, testing
 
 ---
 
-## 🚀 Overview
-
+## Overview
 This project implements a minimal but production-style data pipeline:
-
 Raw Data → Transform → Storage (File + Postgres)
-
 It is designed to demonstrate:
 - Reproducible data engineering workflows
 - Modular pipeline design
