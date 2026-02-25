@@ -28,11 +28,11 @@ Postgres (tables via migration)
 ------
 
 ### Components
-- **Extract**: Read raw CSV data
-- **Transform**:
+> **Extract**: Read raw CSV data
+> **Transform**:
   - Drop null values
   - Filter invalid rows (e.g., negative values)
-- **Load**:
+> **Load**:
   - Save processed CSV
   - Insert into Postgres tables
 ---
