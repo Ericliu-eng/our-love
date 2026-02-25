@@ -4,7 +4,7 @@ A lakehouse-style data engineering pipeline with reproducible workflows, testing
 
 ---
 
-### Overview
+## Overview
 This project implements a minimal but production-style data pipeline:
 Raw Data → Transform → Storage (File + Postgres)
 It is designed to demonstrate:
@@ -14,7 +14,7 @@ It is designed to demonstrate:
 - CI-tested data pipelines
 ---
 
-###  Architecture
+##  Architecture
 ```markdown 
 Pipeline flow:
 data/raw/*.csv
@@ -27,7 +27,7 @@ Postgres (tables via migration)
 ```
 ------
 
-### Components
+## Components
 - **Extract**: Read raw CSV data
 - **Transform**:
   - Drop null values
@@ -37,7 +37,7 @@ Postgres (tables via migration)
   - Insert into Postgres tables
 ---
 
-###  Quickstart
+##Quickstart
 ```bash
 cp .env.example .env
 make setup
@@ -66,17 +66,14 @@ This project includes multiple layers of testing:
 #### Unit Tests
   - Transform logic validation
   - Edge cases (nulls, invalid values)
-  - Smoke Tests
-
-
-End-to-end pipeline execution (tmp_path)
-
-Database connectivity (test_db_smoke.py)
-
-Run all tests:
-
+#### Smoke Tests
+  - End-to-end pipeline execution (tmp_path)
+  - Database connectivity (test_db_smoke.py)
+#### Run all tests:
+```bash
 make test
-📊 Example
+```
+###Example
 Input (data/raw/sample.csv)
 name,amount
 A,10
