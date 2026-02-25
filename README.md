@@ -15,11 +15,12 @@ It is designed to demonstrate:
 ---
 
 ##  Architecture
+```mermaid
 graph TD
-    A[data/raw/*.csv] --> B(Transform: Clean/Filter)
-    B --> C[data/processed/output.csv]
-    B --> D[(Postgres DB)]
-    
+A[data/raw/*.csv] --> B(Transform: Clean/Filter)
+B --> C[data/processed/output.csv]
+B --> D[(Postgres DB)]
+```
 ---
 
 ## Components
