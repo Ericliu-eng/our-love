@@ -61,6 +61,7 @@ Smoke test
 make smoke
 ```
 ---
+
 ## Testing
 This project includes multiple layers of testing:
 ### Unit Tests
@@ -94,36 +95,37 @@ A,10
 ### Example table (via migration):
 - users
   - id (int)
-  -name (text)
-
-
-
-
-
-amount (int)
-
-Created using:
-
+  - name (text)
+  - amount (int)
+### Created using:
+```bash
 make migrate
-📁 Project Structure
+```
+---
+
+## Project Structure
+```markdown
 src/de_lakehouse_pipeline/   # pipeline logic
 scripts/                     # migration scripts
 tests/                       # unit + smoke tests
 data/                        # raw + processed data
 docs/                        # proof / logs
-⚙️ Reproducibility
+```
+---
 
+## Reproducibility
 All workflows are standardized via Makefile:
+```bash
+- make setup
+- make lint
+- make test
+- make run
+- make migrate
+```
 
-make setup
 
-make lint
 
-make test
 
-make run
-
-make migrate
 
 Works consistently across:
 
