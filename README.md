@@ -28,7 +28,6 @@ Postgres (tables via migration)
 ------
 
 ### Components
-
 - **Extract**: Read raw CSV data
 - **Transform**:
   - Drop null values
@@ -36,18 +35,17 @@ Postgres (tables via migration)
 - **Load**:
   - Save processed CSV
   - Insert into Postgres tables
-
 ---
 
-## ⚡ Quickstart
-
+###  Quickstart
 ```bash
 cp .env.example .env
 make setup
 make lint
 make test
 make run
-
+```
+---
 ## Database (Postgres)
 
 Start DB  make db-up
