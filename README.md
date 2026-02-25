@@ -60,13 +60,11 @@ Smoke test
 ```bash
 make smoke
 ```
-🧪 Testing
-
+---
+### Testing
 This project includes multiple layers of testing:
-
-Unit Tests
-
-Transform logic validation
+#### Unit Tests
+-Transform logic validation
 
 Edge cases (nulls, invalid values)
 
